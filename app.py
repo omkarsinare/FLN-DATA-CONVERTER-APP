@@ -89,7 +89,7 @@ uploaded_file = st.file_uploader("Upload your file (CSV or XLSX)", type=["csv", 
 st.sidebar.header("⚙️ Processing Settings")
 
 metadata_input = st.sidebar.text_area(
-    "Enter metadata columns (comma separated):",
+    "Enter all column names before Question1 in your uploaded files",
     value="S.No,File,UDISECODE,TotalStudents,Class,Category"
 )
 # Clean up the user input for column names
@@ -135,4 +135,5 @@ if uploaded_file is not None:
                     )
 else:
     st.info("Please upload a file and click 'Process File' to begin.")
+
 
