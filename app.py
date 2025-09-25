@@ -1,50 +1,16 @@
 import streamlit as st
 import pandas as pd
-import io
-import base64
 
-# try requests first (more robust), fallback to urllib
-try:
-    import requests
-except Exception:
-    requests = None
-import urllib.request
-
-# --- Helper: fetch PDF bytes from a URL and embed as base64 iframe ---
-def embed_pdf_from_url(url, height=800):
+# --- Helper: embed PDF directly via URL ---
+def embed_pdf_via_url(url, height=800):
     """
-    Fetches PDF bytes from `url` and embeds it in the Streamlit page using a
-    base64 data URI so the PDF is shown inline (not downloaded).
+    Embeds a PDF from a direct URL into the Streamlit app using an iframe.
     """
-    pdf_bytes = None
-    # Try requests if available
-    if requests:
-        try:
-            r = requests.get(url, timeout=20)
-            r.raise_for_status()
-            pdf_bytes = r.content
-        except Exception:
-            pdf_bytes = None
-
-    # Fallback to urllib
-    if pdf_bytes is None:
-        try:
-            with urllib.request.urlopen(url, timeout=20) as resp:
-                pdf_bytes = resp.read()
-        except Exception as e:
-            st.error(f"Could not load PDF from URL. Error: {e}")
-            return
-
-    if not pdf_bytes:
-        st.error("PDF could not be loaded (empty content).")
-        return
-
-    b64 = base64.b64encode(pdf_bytes).decode('utf-8')
-    iframe = f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="{height}" type="application/pdf"></iframe>'
+    iframe = f'<iframe src="{url}" width="100%" height="{height}" style="border:none;"></iframe>'
     st.markdown(iframe, unsafe_allow_html=True)
 
 
-# --- Your processing function (kept as provided) ---
+# --- Your processing function (unchanged) ---
 def process_data(uploaded_file, metadata_cols, questions_per_block, total_blocks, case_type):
     """
     Processes the uploaded data in memory and returns a DataFrame.
@@ -117,7 +83,7 @@ st.set_page_config(page_title="OSCAN To STD FLN Data", layout="wide")
 if "show_manual" not in st.session_state:
     st.session_state.show_manual = False
 
-# Sidebar: put the toggle buttons near the bottom (simple divider approach)
+# Sidebar toggle buttons
 st.sidebar.markdown("---")
 if not st.session_state.show_manual:
     if st.sidebar.button("📖 User Manual"):
@@ -128,13 +94,13 @@ else:
         st.session_state.show_manual = False
         st.rerun()
 
-# Raw GitHub raw URL (use raw.githubusercontent.com form for best results)
+# GitHub raw PDF URL
 manual_url = "https://raw.githubusercontent.com/omkarsinare/Converter-/main/User%20Manual.pdf"
 
 # Show manual or main UI based on flag
 if st.session_state.show_manual:
     # Replace entire main UI with the embedded PDF
-    embed_pdf_from_url(manual_url, height=900)
+    embed_pdf_via_url(manual_url, height=900)
 else:
     # ---- Main App UI (file upload + processing) ----
     st.title("📊 OSCAN To STD FLN Data Converter")
