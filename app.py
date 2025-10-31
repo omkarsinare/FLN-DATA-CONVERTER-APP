@@ -10,7 +10,7 @@ def embed_pdf_via_url(url, height=800):
     st.markdown(iframe, unsafe_allow_html=True)
 
 
-# --- Your processing function (unchanged) ---
+# --- Your processing function (updated only Normal Case logic) ---
 def process_data(uploaded_file, metadata_cols, questions_per_block, total_blocks, case_type):
     """
     Processes the uploaded data in memory and returns a DataFrame.
@@ -55,15 +55,25 @@ def process_data(uploaded_file, metadata_cols, questions_per_block, total_blocks
             block_pattern = answers.iloc[start:end].tolist()
             blocks.append(block_pattern)
 
-        # case selection
+        # --- Updated Normal Case: Subblock-based repetition logic ---
         if case_type == "KDMC CASE" and len(blocks) > 17:
+            # KDMC logic remains same
             block1_count = sum(1 for val in blocks[0] if val != 0)
             block18_count = sum(1 for val in blocks[17] if val != 0)
             max_rows = block1_count + block18_count
         else:
-            max_rows = max([sum(1 for val in block if val != 0) for block in blocks]) if blocks else 0
+            # New logic for Normal Case (subblock-based)
+            subblock_indices = []
+            for block in blocks:
+                last_nonzero_index = 0
+                for q_index, val in enumerate(block, start=1):
+                    if val != 0:
+                        last_nonzero_index = q_index  # last non-zero subblock number
+                subblock_indices.append(last_nonzero_index)
+            max_rows = max(subblock_indices) if subblock_indices else 0
+        # -------------------------------------------------------------
 
-        # generate output rows
+        # generate output rows (unchanged)
         for i in range(max_rows):
             new_row = metadata.copy()
             for j, block_pattern in enumerate(blocks):
